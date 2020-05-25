@@ -124,6 +124,7 @@ public class IndicatorSeekBar extends View {
     private boolean mTickMarksEndsHide;//true if want to hide the tickMarks which in both side ends of seek bar
     private boolean mTickMarksSweptHide;//true if want to hide the tickMarks which on thumb left.
     private int mTickMarksSize;//the width of tickMark
+    private Paint mCustomTickMarksPaint;
     private List<Pair<Float, Bitmap[]>> mCustomTickMarksBitmapArrays;
     //track
     private boolean mTrackRoundedCorners;
@@ -524,13 +525,17 @@ public class IndicatorSeekBar extends View {
 
     private void drawTickMarks(Canvas canvas) {
         if (mCustomTickMarksBitmapArrays != null && mCustomTickMarksBitmapArrays.size() > 0) {
+            if(mCustomTickMarksPaint==null){
+                mCustomTickMarksPaint=new Paint();
+                mCustomTickMarksPaint.setAntiAlias(true);
+            }
             for (Pair<Float, Bitmap[]> pair : mCustomTickMarksBitmapArrays) {
                 if (pair.first <= mProgress) {
                     Bitmap bitmap = pair.second[1];
-                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mStockPaint);
+                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mCustomTickMarksPaint);
                 } else {
                     Bitmap bitmap = pair.second[0];
-                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mStockPaint);
+                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mCustomTickMarksPaint);
                 }
             }
         }
