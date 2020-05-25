@@ -1,5 +1,7 @@
 package com.warkiz.indicatorseekbar.fragment;
 
+import android.graphics.drawable.Drawable;
+import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 
@@ -7,6 +9,8 @@ import com.warkiz.indicatorseekbar.R;
 import com.warkiz.widget.IndicatorSeekBar;
 import com.warkiz.widget.OnSeekChangeListener;
 import com.warkiz.widget.SeekParams;
+
+import java.util.Collections;
 
 /**
  * created by zhuangguangquan on  2017/9/6
@@ -35,6 +39,7 @@ public class CustomFragment extends BaseFragment {
         thumb_position.setText("thumb_position: ");
         final TextView tick_text = root.findViewById(R.id.tick_text);
         tick_text.setText("tick_text: ");
+        listenerSeekBar.setCustomTickMarksDrawables(Collections.singletonList(new Pair<Float, Drawable>(42F,getContext().getDrawable(R.drawable.selector_close_out_buy))));
         listenerSeekBar.setOnSeekChangeListener(new OnSeekChangeListener() {
             @Override
             public void onSeeking(SeekParams seekParams) {

@@ -17,10 +17,12 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.annotation.ColorInt;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.text.TextPaint;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewParent;
@@ -31,6 +33,8 @@ import android.view.animation.Animation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * created by zhuangguangquan on 2017/9/1
@@ -120,6 +124,7 @@ public class IndicatorSeekBar extends View {
     private boolean mTickMarksEndsHide;//true if want to hide the tickMarks which in both side ends of seek bar
     private boolean mTickMarksSweptHide;//true if want to hide the tickMarks which on thumb left.
     private int mTickMarksSize;//the width of tickMark
+    private List<Pair<Float, Bitmap[]>> mCustomTickMarksBitmapArrays;
     //track
     private boolean mTrackRoundedCorners;
     private RectF mProgressTrack;//the background track on the thumb start
@@ -518,6 +523,17 @@ public class IndicatorSeekBar extends View {
     }
 
     private void drawTickMarks(Canvas canvas) {
+        if (mCustomTickMarksBitmapArrays != null && mCustomTickMarksBitmapArrays.size() > 0) {
+            for (Pair<Float, Bitmap[]> pair : mCustomTickMarksBitmapArrays) {
+                if (pair.first <= mProgress) {
+                    Bitmap bitmap = pair.second[1];
+                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mStockPaint);
+                } else {
+                    Bitmap bitmap = pair.second[0];
+                    canvas.drawBitmap(bitmap, (pair.first - mMin) * mSeekLength / (getAmplitude()) + mPaddingLeft - bitmap.getWidth() / 2.0f, mProgressTrack.top - bitmap.getHeight() / 2.0f, mStockPaint);
+                }
+            }
+        }
         if (mTicksCount == 0 || (mShowTickMarksType == TickMarkType.NONE && mTickMarksDrawable == null)) {
             return;
         }
@@ -1779,6 +1795,72 @@ public class IndicatorSeekBar extends View {
         }
         invalidate();
     }
+
+
+    public void setCustomTickMarksDrawables(@Nullable List<Pair<Float, Drawable>> drawablePairs) {
+        if (drawablePairs == null) {
+            setCustomTickMarksBitmaps(null);
+        } else {
+            ArrayList<Pair<Float, Bitmap[]>> bitmapArrayPairs = new ArrayList<>();
+            for (Pair<Float, Drawable> drawablePair : drawablePairs) {
+                Bitmap[] bitmapArray = new Bitmap[2];
+                Drawable drawable = drawablePair.second;
+                if (drawable instanceof StateListDrawable) {
+                    StateListDrawable listDrawable = (StateListDrawable) drawable;
+                    try {
+                        Class<? extends StateListDrawable> aClass = listDrawable.getClass();
+                        Method getStateCount = aClass.getMethod("getStateCount");
+                        int stateCount = (int) getStateCount.invoke(listDrawable);
+                        if (stateCount == 2) {
+                            Method getStateSet = aClass.getMethod("getStateSet", int.class);
+                            Method getStateDrawable = aClass.getMethod("getStateDrawable", int.class);
+                            for (int i = 0; i < stateCount; i++) {
+                                int[] stateSet = (int[]) getStateSet.invoke(listDrawable, i);
+                                if (stateSet.length > 0) {
+                                    if (stateSet[0] == android.R.attr.state_selected) {
+                                        Drawable stateDrawable = (Drawable) getStateDrawable.invoke(listDrawable, i);
+                                        bitmapArray[1] = getDrawBitmap(stateDrawable, false);
+                                    } else {
+                                        //please check your selector drawable's format, please see above to correct.
+                                        throw new IllegalArgumentException("the state of the selector TickMarks drawable is wrong!");
+                                    }
+                                } else {
+                                    Drawable stateDrawable = (Drawable) getStateDrawable.invoke(listDrawable, i);
+                                    bitmapArray[0] = getDrawBitmap(stateDrawable, false);
+                                }
+                            }
+                        } else {
+                            //please check your selector drawable's format, please see above to correct.
+                            throw new IllegalArgumentException("the format of the selector TickMarks drawable is wrong!");
+                        }
+                    } catch (Exception e) {
+                        bitmapArray[0] = getDrawBitmap(drawable, false);
+                        bitmapArray[1] = bitmapArray[0];
+                    }
+                } else {
+                    bitmapArray[0] = getDrawBitmap(drawable, false);
+                    bitmapArray[1] = bitmapArray[0];
+                }
+                bitmapArrayPairs.add(new Pair<>(drawablePair.first, bitmapArray));
+            }
+            setCustomTickMarksBitmaps(bitmapArrayPairs);
+        }
+
+
+    }
+
+
+    public void setCustomTickMarksBitmaps(@Nullable List<Pair<Float, Bitmap[]>> bitmapArrayPairs) {
+        if (bitmapArrayPairs == null) {
+            this.mCustomTickMarksBitmapArrays = null;
+        } else {
+            this.mCustomTickMarksBitmapArrays = bitmapArrayPairs;
+            this.mTickRadius = Math.min(SizeUtils.dp2px(mContext, THUMB_MAX_WIDTH), mTickMarksSize) / 2.0f;
+            this.mCustomDrawableMaxHeight = Math.max(mThumbTouchRadius, mTickRadius) * 2.0f;
+        }
+        invalidate();
+    }
+
 
     /**
      * set the seek bar's tick's color.
