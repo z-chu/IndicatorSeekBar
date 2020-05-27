@@ -331,6 +331,7 @@ public class IndicatorSeekBar extends View {
             mStockPaint.setStrokeCap(Paint.Cap.ROUND);
         }
         mStockPaint.setAntiAlias(true);
+        mStockPaint.setFilterBitmap(true);
         if (mBackgroundTrackSize > mProgressTrackSize) {
             mProgressTrackSize = mBackgroundTrackSize;
         }
@@ -353,6 +354,7 @@ public class IndicatorSeekBar extends View {
         if (mTextPaint == null) {
             mTextPaint = new TextPaint();
             mTextPaint.setAntiAlias(true);
+            mTextPaint.setFilterBitmap(true);
             mTextPaint.setTextAlign(Paint.Align.CENTER);
             mTextPaint.setTextSize(mTickTextsSize);
         }
@@ -476,6 +478,7 @@ public class IndicatorSeekBar extends View {
 
     @Override
     protected synchronized void onDraw(Canvas canvas) {
+        //    canvas.setDrawFilter(new PaintFlagsDrawFilter(0,Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
         drawTrack(canvas);
         drawTickMarks(canvas);
         drawTickTexts(canvas);
@@ -485,6 +488,7 @@ public class IndicatorSeekBar extends View {
             if(mCustomTickMarksPaint==null){
                 mCustomTickMarksPaint=new Paint();
                 mCustomTickMarksPaint.setAntiAlias(true);
+                mCustomTickMarksPaint.setFilterBitmap(true);
             }
             for (Pair<Float, Bitmap[]> pair : mCustomTickMarksBitmapArrays) {
                 if (pair.first <= mProgress) {
@@ -765,7 +769,7 @@ public class IndicatorSeekBar extends View {
             width = drawable.getIntrinsicWidth();
             height = drawable.getIntrinsicHeight();
         }
-
+        drawable.setFilterBitmap(true);
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
@@ -1065,6 +1069,7 @@ public class IndicatorSeekBar extends View {
                         if (stateSet.length > 0) {
                             if (stateSet[0] == android.R.attr.state_pressed) {
                                 Drawable stateDrawable = (Drawable) getStateDrawable.invoke(listDrawable, i);
+                                stateDrawable.setFilterBitmap(true);
                                 mPressedThumbBitmap = getDrawBitmap(stateDrawable, true);
                             } else {
                                 //please check your selector drawable's format, please see above to correct.
@@ -1072,6 +1077,7 @@ public class IndicatorSeekBar extends View {
                             }
                         } else {
                             Drawable stateDrawable = (Drawable) getStateDrawable.invoke(listDrawable, i);
+                            stateDrawable.setFilterBitmap(true);
                             mThumbBitmap = getDrawBitmap(stateDrawable, true);
                         }
                     }
